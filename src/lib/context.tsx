@@ -1,8 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { AppData, LearningRecord, Mastery, Settings } from '../types';
+import type {
+  AppData,
+  ClassSession,
+  LearningRecord,
+  Mastery,
+  MemoryNote,
+  Settings,
+} from '../types';
 import { blankRecord, readData, recordPractice, writeData } from './storage';
-import { englishVoices, preferredVoice } from './speech';
+import { englishVoices, preferredVoice, NORMAL_RATE, SLOW_RATE } from './speech';
 import { localDate } from './dates';
 import { dailyPlan, planIds } from './recommendations';
 const useAppState = () => {
@@ -113,7 +120,7 @@ const useAppState = () => {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.voice = voice;
     utterance.lang = voice.lang;
-    utterance.rate = slow ? 0.72 : 0.94;
+    utterance.rate = slow ? SLOW_RATE : NORMAL_RATE;
     const sequence = sequenceRef.current;
     utterance.onend = () => {
       if (sequence === sequenceRef.current) {
@@ -175,7 +182,40 @@ const useAppState = () => {
     setPlan(selected);
     setNotice('備份已匯入。學習紀錄與設定已更新。');
   };
+  const saveClassSession = (session: ClassSession) => {
+    const current = dataRef.current;
+    if (
+      current.classSessions.length >= 200 &&
+      !current.classSessions.some((c) => c.id === session.id)
+    ) {
+      setNotice('課堂筆記已滿，現有筆記都會保留。請先匯出備份，你仍可編輯舊筆記。');
+      return false;
+    }
+    const sessions = [session, ...current.classSessions.filter((c) => c.id !== session.id)].sort(
+      (a, b) => b.date.localeCompare(a.date),
+    );
+    commit({ ...current, classSessions: sessions });
+    setNotice('課堂筆記已保存。下次換一組或明天開始，會優先安排近兩週的課堂內容。');
+    return true;
+  };
+  const saveMemory = (memory: MemoryNote) => {
+    const current = dataRef.current;
+    if (current.memories.length >= 300 && !current.memories.some((m) => m.id === memory.id)) {
+      setNotice('小發現筆記已滿，現有回憶都會保留。請先匯出備份，你仍可編輯舊筆記。');
+      return false;
+    }
+    commit({
+      ...current,
+      memories: [memory, ...current.memories.filter((m) => m.id !== memory.id)].sort((a, b) =>
+        b.date.localeCompare(a.date),
+      ),
+    });
+    setNotice('今天的小發現，已經好好收進成長紀錄了。');
+    return true;
+  };
   return {
+    saveClassSession,
+    saveMemory,
     data,
     record,
     practice,

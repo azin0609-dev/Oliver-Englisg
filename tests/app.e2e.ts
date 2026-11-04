@@ -5,7 +5,9 @@ test('all six home entrances work, with no browser errors', async ({ page }) => 
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Good morning, Oliver!' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: /Good (morning|afternoon|evening|night), Oliver!/ }),
+  ).toBeVisible();
   const cards = page.locator('.entrance-card');
   expect(await cards.count()).toBe(6);
   for (let i = 0; i < 6; i++) {
@@ -20,14 +22,16 @@ test('today can be completed, skipped, resumed and replaced; practice preserves 
   page,
 }) => {
   await page.goto('/#/today');
+  await page.locator('.full-adventure > summary').click();
   await expect(page.locator('.daily-words .material-card')).toHaveCount(3);
   const first = await page.locator('.daily-words h3').first().textContent();
   await page.getByRole('button', { name: '我們一起看過了' }).first().click();
   await expect(page.getByText('1 / 7 個小時刻')).toBeVisible();
   await page.reload();
+  await page.locator('.full-adventure > summary').click();
   await expect(page.getByText('1 / 7 個小時刻')).toBeVisible();
   await expect(page.locator('.daily-words h3').first()).toHaveText(first!);
-  await page.getByRole('button', { name: '今天先休息' }).click();
+  await page.locator('.full-adventure').getByRole('button', { name: '今天先休息' }).click();
   await expect(page.getByText('今天，休息也是很棒的選擇。')).toBeVisible();
   await page.getByRole('button', { name: '繼續今天的小冒險' }).click();
   await page.getByRole('button', { name: '換一組', exact: true }).click();
@@ -54,6 +58,7 @@ test('Chinese phrase and English word search; save observation and favorite; reo
   await reopen.goto('/#/favorites');
   await expect(reopen.locator('.material-card h3')).toHaveText("It's time to brush your teeth.");
   await reopen.goto('/#/progress');
+  await reopen.locator('.observation-summary > summary').click();
   await expect(reopen.getByRole('heading', { name: '本週複習 1 句英文' })).toBeVisible();
   await expect(reopen.locator('.weekly-bars')).toContainText('能主動說出1');
   await reopen.goto('/#/search?q=dinosaur');
@@ -72,6 +77,7 @@ test('all dialogue modes, free navigation, Chinese toggle and independent line o
   );
   await page.getByRole('button', { name: '隱藏中文', exact: true }).click();
   await expect(page.locator('.conversation-focus>.translation')).toHaveCount(0);
+  await page.locator('.conversation-focus .observation-later > summary').click();
   await page.getByRole('button', { name: '聽得懂', exact: true }).click();
   await page.getByRole('button', { name: '顯示整段', exact: true }).click();
   await expect(page.locator('.conversation-line')).toHaveCount(6);
@@ -127,8 +133,8 @@ test('speech normal/slow replace active utterances, selected voice is used, and 
   );
   const spoken = calls.filter((c) => c.type === 'speak');
   expect(spoken).toHaveLength(2);
-  expect(spoken[0].rate).toBe(0.94);
-  expect(spoken[1].rate).toBe(0.72);
+  expect(spoken[0].rate).toBe(0.96);
+  expect(spoken[1].rate).toBe(0.82);
   expect(spoken[0].voice).toBe('test-us');
   for (let i = 0; i < calls.length; i++)
     if (calls[i].type === 'speak') expect(calls[i - 1].type).toBe('cancel');
@@ -244,6 +250,9 @@ test('no horizontal overflow at 320, 375, 390 and 768 px on representative pages
       '/review',
       '/settings',
       '/progress',
+      '/quick/food',
+      '/about',
+      '/class-notes',
     ]) {
       await page.goto(`/#${path}`);
       await expect(page.locator('main h1')).toBeVisible();

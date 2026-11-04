@@ -1,6 +1,7 @@
 import type { AppData, LearningRecord, Mastery, Settings } from '../types';
-import { materialById, trackableSentences } from '../data';
+import { materialById, trackableSentences, sentences } from '../data';
 import { isDate, localDate, weekStart } from './dates';
+import { lessonTopics } from '../data/parentTools';
 export const STORAGE_KEY = 'oliver-adventure-v1';
 export const blankRecord: LearningRecord = {
   mastery: 0,
@@ -13,6 +14,8 @@ export function freshData(): AppData {
     version: 1,
     settings: { nickname: 'Oliver', difficulty: 2, voiceURI: '', classDays: [3, 5] },
     records: {},
+    classSessions: [],
+    memories: [],
     history: [],
     daily: { date: localDate(), seed: 0, completed: [], selection: [], skipped: false },
   };
@@ -106,8 +109,64 @@ export function validateData(value: unknown): AppData {
     new Set(d.completed).size !== d.completed.length
   )
     return fail();
+  const classSessions = value.classSessions ?? [];
+  const memories = value.memories ?? [];
+  if (
+    !Array.isArray(classSessions) ||
+    classSessions.length > 200 ||
+    !classSessions.every(
+      (c) =>
+        obj(c) &&
+        typeof c.id === 'string' &&
+        /^[a-zA-Z0-9-]{1,80}$/.test(c.id) &&
+        isDate(c.date) &&
+        Array.isArray(c.topics) &&
+        c.topics.length <= lessonTopics.length &&
+        new Set(c.topics).size === c.topics.length &&
+        c.topics.every((t) => lessonTopics.some((topic) => topic.id === t)) &&
+        Array.isArray(c.sentenceIds) &&
+        c.sentenceIds.length <= 3 &&
+        new Set(c.sentenceIds).size === c.sentenceIds.length &&
+        c.sentenceIds.every((id) => typeof id === 'string' && sentences.some((s) => s.id === id)) &&
+        typeof c.note === 'string' &&
+        c.note.length <= 280,
+    ) ||
+    new Set(classSessions.map((c) => c.id)).size !== classSessions.length
+  )
+    return fail();
+  if (
+    !Array.isArray(memories) ||
+    memories.length > 300 ||
+    !memories.every(
+      (m) =>
+        obj(m) &&
+        typeof m.id === 'string' &&
+        /^[a-zA-Z0-9-]{1,80}$/.test(m.id) &&
+        isDate(m.date) &&
+        typeof m.quote === 'string' &&
+        m.quote.length <= 160 &&
+        typeof m.context === 'string' &&
+        m.context.trim().length > 0 &&
+        m.context.length <= 280,
+    ) ||
+    new Set(memories.map((m) => m.id)).size !== memories.length
+  )
+    return fail();
   return {
     version: 1,
+    classSessions: classSessions.map((c) => ({
+      id: c.id,
+      date: c.date,
+      topics: [...c.topics],
+      sentenceIds: [...c.sentenceIds],
+      note: c.note,
+    })),
+    memories: memories.map((m) => ({
+      id: m.id,
+      date: m.date,
+      quote: m.quote,
+      context: m.context.trim(),
+    })),
     settings: {
       nickname: s.nickname.trim(),
       difficulty: s.difficulty as Settings['difficulty'],
@@ -183,7 +242,7 @@ export function weeklySummary(data: AppData, now = new Date()) {
 }
 export function exportBackup(data: AppData): string {
   return JSON.stringify(
-    { app: 'olivers-english-adventure', version: 1, exportedAt: new Date().toISOString(), data },
+    { app: 'olivers-english-adventure', version: 2, exportedAt: new Date().toISOString(), data },
     null,
     2,
   );
@@ -197,7 +256,11 @@ export function parseBackup(raw: string): AppData {
   } catch {
     throw new Error('這不是有效的 JSON 檔案。目前的資料未變更。');
   }
-  if (!obj(value) || value.app !== 'olivers-english-adventure' || value.version !== 1)
+  if (
+    !obj(value) ||
+    value.app !== 'olivers-english-adventure' ||
+    ![1, 2].includes(value.version as number)
+  )
     return fail();
   return validateData(value.data);
 }

@@ -2,6 +2,7 @@ import type { AppData, Material } from '../types';
 import { words, sentences, dialogues, tasks } from '../data';
 import { categories } from '../data/categories';
 import { localDate } from './dates';
+import { lessonTopics } from '../data/parentTools';
 function hash(s: string): number {
   let h = 2166136261;
   for (const ch of s) {
@@ -38,8 +39,20 @@ export function dailyPlan(data: AppData, now = new Date()) {
       };
     }
   }
+  const recentClasses = (data.classSessions ?? []).filter(
+    (c) =>
+      c.date <= date &&
+      new Date(`${date}T12:00:00`).getTime() - new Date(`${c.date}T12:00:00`).getTime() <=
+        14 * 86400000,
+  );
+  const classIds = new Set(recentClasses.flatMap((c) => c.sentenceIds));
+  const topicIds = new Set(
+    recentClasses.flatMap((c) =>
+      lessonTopics.filter((t) => c.topics.includes(t.id)).flatMap((t) => t.sentenceIds),
+    ),
+  );
   let familiarBudget = 5; // 5 of the 7 items ≈ 70%, when enough familiar items are available.
-  function choose<T extends Material>(pool: T[], n: number): T[] {
+  function choose<T extends Material>(pool: T[], n: number, prioritizeClass = false): T[] {
     const selected: T[] = [];
     for (let slot = 0; slot < n; slot++) {
       const available = pool.filter((m) => !selected.some((s) => s.id === m.id));
@@ -50,8 +63,20 @@ export function dailyPlan(data: AppData, now = new Date()) {
         (m) =>
           !data.records[m.id]?.mastery && m.difficulty <= Math.min(3, data.settings.difficulty + 1),
       );
-      const candidates =
-        familiarBudget > 0 && familiar.length ? familiar : fresh.length ? fresh : available;
+      const classCandidates =
+        prioritizeClass && slot === 0
+          ? available.filter(
+              (m) =>
+                classIds.has(m.id) && m.difficulty <= Math.min(3, data.settings.difficulty + 1),
+            )
+          : [];
+      const candidates = classCandidates.length
+        ? classCandidates
+        : familiarBudget > 0 && familiar.length
+          ? familiar
+          : fresh.length
+            ? fresh
+            : available;
       const ranked = [...candidates].sort(
         (a, b) => score(b) - score(a) || a.id.localeCompare(b.id),
       );
@@ -67,6 +92,8 @@ export function dailyPlan(data: AppData, now = new Date()) {
     const age = r?.lastPracticed ? (now.getTime() - Date.parse(r.lastPracticed)) / 86400000 : 14;
     // Recent practice is intentionally downweighted. The date/seed keeps the selection reproducible.
     return (
+      (classIds.has(m.id) ? 90 : 0) +
+      (topicIds.has(m.id) ? 25 : 0) +
       (m.category === theme ? 30 : 0) +
       (m.category === 'toys' ? 9 : 0) +
       (m.tags.includes('英文課') && classroom ? 12 : 0) +
@@ -84,7 +111,7 @@ export function dailyPlan(data: AppData, now = new Date()) {
     theme,
     classroom,
     words: choose(words, 3),
-    sentences: choose(sentences, 2),
+    sentences: choose(sentences, 2, true),
     dialogue: choose(dialogues, 1)[0],
     task: choose(tasks, 1)[0],
   };

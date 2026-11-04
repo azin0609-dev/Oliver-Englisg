@@ -1,83 +1,13 @@
 import { useState } from 'react';
-import {
-  Bookmark,
-  Check,
-  ChevronDown,
-  Lightbulb,
-  MessageCircle,
-  Play,
-  Volume2,
-  Turtle,
-  Repeat2,
-} from 'lucide-react';
-import type { ActionTask, Mastery, Material, Sentence } from '../types';
+import { Check, ChevronDown, Lightbulb, MessageCircle, Play, Repeat2 } from 'lucide-react';
+import type { ActionTask, Material, Sentence } from '../types';
 import { useApp } from '../lib/context';
 import { categoryById } from '../data/categories';
-export const masteryLabels = ['尚未學習', '聽得懂', '提示後會說', '能主動說出'];
-export const difficultyLabels = ['', 'Understand', 'Respond', 'Express'];
-export function SpeechButtons({ text, compact = false }: { text: string; compact?: boolean }) {
-  const { speak, speaking } = useApp();
-  return (
-    <div className={`speech-actions ${compact ? 'compact' : ''}`}>
-      <button
-        className={`play-button ${speaking === text ? 'is-playing' : ''}`}
-        onClick={() => speak(text)}
-        aria-label={`播放英文：${text}`}
-      >
-        <Volume2 size={17} />
-        {!compact && '播放英文'}
-      </button>
-      <button
-        className="slow-button"
-        onClick={() => speak(text, true)}
-        aria-label={`慢速播放：${text}`}
-      >
-        <Turtle size={17} />
-        {!compact && '慢速'}
-      </button>
-    </div>
-  );
-}
-export function FavoriteButton({ id, english }: { id: string; english: string }) {
-  const { record, favorite } = useApp();
-  const saved = record(id).favorite;
-  return (
-    <button
-      className={`icon-button favorite ${saved ? 'saved' : ''}`}
-      aria-label={`${saved ? '取消收藏' : '收藏'}：${english}`}
-      aria-pressed={saved}
-      onClick={() => favorite(id)}
-    >
-      <Bookmark size={20} fill={saved ? 'currentColor' : 'none'} />
-    </button>
-  );
-}
-export function MasteryPicker({ id }: { id: string }) {
-  const { record, practice, setNotice } = useApp();
-  return (
-    <fieldset className="mastery-picker">
-      <legend>
-        爸媽的觀察 <span>沒有測驗，慢慢來就好</span>
-      </legend>
-      <div className="mastery-options">
-        {masteryLabels.map((label, i) => (
-          <button
-            key={label}
-            className={record(id).mastery === i ? `selected mastery-${i}` : ''}
-            onClick={() => {
-              practice(id, i as Mastery);
-              setNotice(`已記錄：${label}`);
-            }}
-            aria-pressed={record(id).mastery === i}
-          >
-            {record(id).mastery === i && <Check size={13} />}
-            <span>{label}</span>
-          </button>
-        ))}
-      </div>
-    </fieldset>
-  );
-}
+import { SpeechButtons } from './SpeechButtons';
+import { PhraseHelp, ResponseSupport } from './ParentSupport';
+export { SpeechButtons } from './SpeechButtons';
+export { FavoriteButton, MasteryPicker, masteryLabels } from './LearningControls';
+import { FavoriteButton, MasteryPicker, difficultyLabels, masteryLabels } from './LearningControls';
 export function MaterialCard({
   item,
   expanded = false,
@@ -89,7 +19,7 @@ export function MaterialCard({
 }) {
   const [details, setDetails] = useState(expanded);
   const [chinese, setChinese] = useState(true);
-  const { record, practice, setNotice } = useApp();
+  const { record, practice, setNotice, data } = useApp();
   const sentence = 'nextLine' in item ? (item as Sentence) : null;
   return (
     <article className={`material-card ${item.id.startsWith('word') ? 'word-card' : ''}`}>
@@ -131,7 +61,7 @@ export function MaterialCard({
       {details && (
         <div className="material-details">
           <div className="reply-box">
-            <span className="eyebrow">OLIVER 可以這樣說</span>
+            <span className="eyebrow">{data.settings.nickname} 可以這樣說</span>
             <div className="inline-speech">
               <p lang="en">{item.suggestedReply}</p>
               <SpeechButtons text={item.suggestedReply} compact />
@@ -146,6 +76,8 @@ export function MaterialCard({
               </>
             )}
           </div>
+          <PhraseHelp text={item.english} />
+          {observe && <ResponseSupport reply={item.suggestedReply} />}
           <p className="parent-tip">
             <Lightbulb size={16} />
             {item.parentTip}

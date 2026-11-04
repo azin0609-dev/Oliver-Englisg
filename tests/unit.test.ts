@@ -123,7 +123,7 @@ describe('device data, observations and backup validation', () => {
     null,
     {},
     { app: 'other', version: 1 },
-    { app: 'olivers-english-adventure', version: 2 },
+    { app: 'olivers-english-adventure', version: 3 },
   ])('rejects unsupported backup envelopes', (value) => {
     expect(() => parseBackup(JSON.stringify(value))).toThrow();
   });
@@ -207,5 +207,153 @@ describe('gentle daily recommendations', () => {
     data.daily.date = localDate(now);
     const items = planIds(dailyPlan(data, now)).map((id) => materialById[id]);
     expect(items.filter((i) => i.difficulty <= 2).length).toBeGreaterThanOrEqual(5);
+  });
+});
+
+import { rankVoices, phraseChunks, isNaturalVoice } from '../src/lib/speech';
+import { greeting, responseSupport, expandReply } from '../src/lib/parenting';
+import { quickPair, quickSituations, lessonTopics } from '../src/data/parentTools';
+function voice(name: string, lang = 'en-US', isDefault = false): SpeechSynthesisVoice {
+  return { name, lang, voiceURI: name, default: isDefault, localService: true };
+}
+describe('parent-friendly American speech', () => {
+  it('excludes iOS novelty voices rather than calling every English voice suitable', () => {
+    const list = rankVoices([
+      voice('Boing'),
+      voice('Bubbles'),
+      voice('Bad News'),
+      voice('Whisper'),
+      voice('Organ'),
+      voice('Albert'),
+      voice('Samantha'),
+      voice('Alex'),
+      voice('Daniel', 'en-GB'),
+    ]);
+    expect(list.map((v) => v.name)).toEqual(['Samantha', 'Alex']);
+    expect(isNaturalVoice(voice('Singing Voice'))).toBe(false);
+  });
+  it('keeps the recommended automatic voice first and deduplicates device entries', () => {
+    expect(
+      rankVoices([voice('Alex'), voice('Samantha'), voice('Samantha')]).map((v) => v.name),
+    ).toEqual(['Samantha', 'Alex']);
+    expect(rankVoices([voice('Daniel', 'en-GB')])[0].name).toBe('Daniel');
+  });
+  it('splits useful phrases without losing or changing words', () => {
+    for (const text of [
+      'Put the dinosaur in the box.',
+      'Can you find the blue car?',
+      'Would you like an apple or a banana?',
+      'Good night. I love you.',
+    ])
+      expect(phraseChunks(text).join(' ')).toBe(text);
+    expect(phraseChunks('Put the dinosaur in the box.')).toEqual([
+      'Put the dinosaur',
+      'in the box.',
+    ]);
+    expect(phraseChunks('Good night!')).toEqual(['Good night!']);
+  });
+});
+describe('support for real parent-child interactions', () => {
+  it('greets the family according to the local time, including late nights', () => {
+    expect(greeting(1).english).toBe('Good night');
+    expect(greeting(9).english).toBe('Good morning');
+    expect(greeting(15).english).toBe('Good afternoon');
+    expect(greeting(21).english).toBe('Good evening');
+  });
+  it('supports silence, a single word, Chinese and choosing to stop without grading', () => {
+    expect(responseSupport('I want the T. rex.').map((s) => s.id)).toEqual([
+      'quiet',
+      'word',
+      'chinese',
+      'away',
+    ]);
+    expect(expandReply('I want the T. rex.')).toBe('You want the T. rex.');
+    expect(expandReply("I'm hungry.")).toBe('You are hungry.');
+    expect(expandReply('Help me, please.')).toBe('Of course. I can help.');
+  });
+  it('uses real built-in materials for every shortcut, daily action pair and class topic', () => {
+    for (const shortcut of quickSituations)
+      expect(sentences.some((s) => s.id === shortcut.sentenceId)).toBe(true);
+    for (const task of tasks) {
+      const pair = quickPair(task.id);
+      expect(pair.sentence).toBeDefined();
+      expect(pair.sentence.category).toBe(task.category);
+    }
+    for (const topic of lessonTopics)
+      for (const id of topic.sentenceIds) expect(sentences.some((s) => s.id === id)).toBe(true);
+  });
+});
+describe('upgrade safety and richer local observations', () => {
+  it('migrates an existing v1 device record and old backup without resetting progress', () => {
+    const original = recordPractice(freshData(), sentences[0].id, 3, now);
+    const legacy = JSON.parse(JSON.stringify(original));
+    delete legacy.classSessions;
+    delete legacy.memories;
+    const migrated = validateData(legacy);
+    expect(migrated.records).toEqual(original.records);
+    expect(migrated.history).toEqual(original.history);
+    expect(migrated.classSessions).toEqual([]);
+    expect(migrated.memories).toEqual([]);
+    expect(
+      parseBackup(JSON.stringify({ app: 'olivers-english-adventure', version: 1, data: legacy })),
+    ).toEqual(migrated);
+  });
+  it('roundtrips class notes and memories in a v2 backup and rejects invalid nested IDs', () => {
+    const data = freshData();
+    data.classSessions = [
+      {
+        id: 'class-1',
+        date: '2026-11-04',
+        topics: ['magnets'],
+        sentenceIds: ['sentence-toys-4'],
+        note: '喜歡橘色磁鐵',
+      },
+    ];
+    data.memories = [
+      { id: 'memory-1', date: '2026-11-04', quote: 'More bubbles!', context: '洗澡時自己說' },
+    ];
+    const backup = exportBackup(data);
+    expect(JSON.parse(backup).version).toBe(2);
+    expect(parseBackup(backup)).toEqual(data);
+    data.classSessions[0].sentenceIds = ['dialogue-food-1'];
+    expect(() => validateData(data)).toThrow();
+  });
+  it('prioritizes a recent teacher-selected sentence without marking it as learned', () => {
+    const data = freshData();
+    data.daily.date = localDate(now);
+    data.classSessions = [
+      {
+        id: 'class-2',
+        date: localDate(now),
+        topics: ['letters'],
+        sentenceIds: ['classroom-2'],
+        note: '',
+      },
+    ];
+    const plan = dailyPlan(data, now);
+    expect(plan.sentences.some((s) => s.id === 'classroom-2')).toBe(true);
+    expect(data.records['classroom-2']).toBeUndefined();
+  });
+  it('does not recommend future or stale classes as current class material', () => {
+    const data = freshData();
+    data.daily.date = localDate(now);
+    const original = dailyPlan(data, now);
+    data.classSessions = [
+      {
+        id: 'old',
+        date: '2026-01-01',
+        topics: ['letters'],
+        sentenceIds: ['classroom-2'],
+        note: '',
+      },
+      {
+        id: 'future',
+        date: '2026-12-01',
+        topics: ['letters'],
+        sentenceIds: ['classroom-2'],
+        note: '',
+      },
+    ];
+    expect(dailyPlan(data, now)).toEqual(original);
   });
 });

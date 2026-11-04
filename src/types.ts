@@ -51,6 +51,8 @@ export interface AppData {
   version: 1;
   settings: Settings;
   records: Record<string, LearningRecord>;
+  classSessions: ClassSession[];
+  memories: MemoryNote[];
   history: PracticeEvent[];
   daily: { date: string; seed: number; completed: string[]; selection: string[]; skipped: boolean };
 }
@@ -63,4 +65,17 @@ export interface Category {
   color: string;
   description: string;
   tip: string;
+}
+export interface ClassSession {
+  id: string;
+  date: string;
+  topics: string[];
+  sentenceIds: string[];
+  note: string;
+}
+export interface MemoryNote {
+  id: string;
+  date: string;
+  quote: string;
+  context: string;
 }

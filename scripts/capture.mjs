@@ -17,6 +17,13 @@ for (const [device, options] of [
   if (device === 'iphone') {
     await page.goto('http://127.0.0.1:4173/#/dialogue/dialogue-food-1');
     await page.screenshot({ path: 'docs/screenshots/iphone-dialogue.png', fullPage: true });
+    for (const route of ['quick/food', 'about', 'today', 'class-notes']) {
+      await page.goto(`http://127.0.0.1:4173/#/${route}`);
+      await page.screenshot({
+        path: `docs/screenshots/iphone-${route.replace('/', '-')}.png`,
+        fullPage: true,
+      });
+    }
   }
   await page.close();
 }

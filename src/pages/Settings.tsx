@@ -20,6 +20,9 @@ import { localDate } from '../lib/dates';
 import { PageHeading } from '../components/Cards';
 export default function SettingsPage() {
   const { data, settings, voices, speak, setNotice, replaceData } = useApp();
+  const recommendedVoices = voices.slice(0, 3);
+  const savedVoice = voices.find((v) => v.voiceURI === data.settings.voiceURI);
+  if (savedVoice && !recommendedVoices.includes(savedVoice)) recommendedVoices.push(savedVoice);
   const [nickname, setNickname] = useState(data.settings.nickname);
   const [pending, setPending] = useState<AppData | null>(null);
   const [error, setError] = useState('');
@@ -140,15 +143,19 @@ export default function SettingsPage() {
           <Volume2 size={22} />
           <h2>英文語音</h2>
         </div>
-        <label htmlFor="voice">裝置提供的英文聲音</label>
+        <p className="voice-guidance">
+          先用第一個「自動選擇」就好。我們已排除角色音與特殊效果，清單優先保留一般美式英文，不需要下載另一套
+          App 語音包。
+        </p>
+        <label htmlFor="voice">日常美語示範聲音</label>
         <select
           id="voice"
           className="full-select"
           value={data.settings.voiceURI}
           onChange={(e) => settings({ voiceURI: e.target.value })}
         >
-          <option value="">自動選擇 · 優先美式英文 en-US</option>
-          {voices.map((v) => (
+          <option value="">建議：自動選擇自然美語</option>
+          {recommendedVoices.map((v) => (
             <option value={v.voiceURI} key={v.voiceURI}>
               {v.name} · {v.lang}
               {v.localService ? ' · 裝置語音' : ''}
@@ -157,7 +164,13 @@ export default function SettingsPage() {
         </select>
         {data.settings.voiceURI && !voices.some((v) => v.voiceURI === data.settings.voiceURI) && (
           <p className="inline-warning">
-            原本選擇的聲音在這台裝置不可用，播放時會自動使用其他英文聲音。
+            先前的聲音目前不可用，或屬於已排除的角色音。本版會改用建議的自然英文聲音。
+          </p>
+        )}
+        {voices.length > 0 && !voices.some((v) => /^en[-_]US$/i.test(v.lang)) && (
+          <p className="inline-warning">
+            這台裝置尚未提供美式英文，暫用其他一般英文聲音。可在 iPhone 聲音設定下載 English（United
+            States），再回來選擇。
           </p>
         )}
         <button
@@ -282,6 +295,13 @@ export default function SettingsPage() {
           版本而異，切換前請先備份。
         </p>
       </section>
+      <a href="#/about" className="settings-brand-link">
+        <Heart size={24} />
+        <div>
+          <strong>品牌說明・我們為什麼做這個 App</strong>
+          <span>英文不用很厲害，也能陪孩子建立日常美語情境。</span>
+        </div>
+      </a>
       <section className="privacy-card">
         <ShieldCheck size={29} />
         <div>
@@ -291,7 +311,7 @@ export default function SettingsPage() {
             或第三方追蹤。不錄音、不使用麥克風、不取得位置，也不上傳學習紀錄。內建教材與原創 SVG
             插畫隨 App 提供，僅在裝置本機保存你的設定與紀錄。
           </p>
-          <span>Oliver's English Adventure · v1.0.0</span>
+          <span>Oliver's English Adventure · v1.1.0</span>
         </div>
       </section>
     </div>

@@ -5,6 +5,7 @@ import { useApp } from '../lib/context';
 import { materialById } from '../data';
 import { EmptyState, MaterialCard, PageHeading } from '../components/Cards';
 export function SearchPage({ query }: { query: string }) {
+  const { data } = useApp();
   const [value, setValue] = useState(query);
   const [limit, setLimit] = useState(20);
   const results = useMemo(() => searchMaterials(query), [query]);
@@ -12,7 +13,7 @@ export function SearchPage({ query }: { query: string }) {
     <div>
       <PageHeading
         eyebrow="FIND THE WORDS FOR THIS MOMENT"
-        title="現在，想跟 Oliver 說什麼？"
+        title={`現在，想跟 ${data.settings.nickname} 說什麼？`}
         description="中文、英文都可以。從內建教材裡，找一句自然的說法。"
       />
       <form

@@ -1,19 +1,18 @@
+import { useState, useEffect } from 'react';
 import {
   ArrowRight,
   ArrowUpRight,
   Bookmark,
-  CalendarDays,
   ChevronRight,
   Clock3,
   Heart,
-  Leaf,
   Search,
-  Sun,
 } from 'lucide-react';
-import { useState } from 'react';
 import { Garden, TopicIcon } from '../components/Art';
 import { useApp } from '../lib/context';
-import { weeklySummary } from '../lib/storage';
+import { greeting } from '../lib/parenting';
+import { quickSituations } from '../data/parentTools';
+import { sentences } from '../data';
 const entrances = [
   {
     number: '01',
@@ -71,33 +70,43 @@ const entrances = [
   },
 ];
 export default function HomePage() {
-  const { data, plan } = useApp();
+  const { data } = useApp();
   const [query, setQuery] = useState('');
-  const summary = weeklySummary(data);
-  const date = new Date();
+  const [hour, setHour] = useState(new Date().getHours());
+  useEffect(() => {
+    const refresh = () => setHour(new Date().getHours());
+    const timer = setInterval(refresh, 60000);
+    window.addEventListener('focus', refresh);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('focus', refresh);
+    };
+  }, []);
+  const hello = greeting(hour);
+  const recent = sentences
+    .filter((s) => data.records[s.id]?.lastPracticed)
+    .sort((a, b) =>
+      (data.records[b.id].lastPracticed ?? '').localeCompare(
+        data.records[a.id].lastPracticed ?? '',
+      ),
+    )
+    .slice(0, 3);
+  const latestClass = data.classSessions[0];
   return (
-    <div className="home-page">
-      <div className="home-topline">
-        <span>
-          <span className="tiny-sun">
-            <Sun size={14} />
-          </span>{' '}
-          A LITTLE ENGLISH, A LOT OF LOVE
-        </span>
-        <span className="today-date">
-          {date.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' })}
-        </span>
-      </div>
+    <div className="home-page parent-home">
       <section className="welcome">
         <div>
-          <p className="welcome-caption">每天 5 分鐘，讓英文成為生活的一部分。</p>
-          <h1 lang="en" aria-label={`Good morning, ${data.settings.nickname}!`}>
-            Good morning,{' '}
+          <span className="home-welcome-label">
+            <TopicIcon name={hello.icon} size={16} />
+            給忙碌爸媽的日常美語小幫手
+          </span>
+          <h1 lang="en" aria-label={`${hello.english}, ${data.settings.nickname}!`}>
+            {hello.english},{' '}
             <span>
               {data.settings.nickname}
               <svg viewBox="0 0 245 14" aria-hidden="true">
                 <path
-                  d="M3 9C68 0 151 0 241 7M21 13c66-7 130-7 200-3"
+                  d="M3 9C68 0 151 0 241 7"
                   stroke="currentColor"
                   strokeWidth="3"
                   fill="none"
@@ -105,14 +114,12 @@ export default function HomePage() {
                 />
               </svg>
             </span>
-            <span className="greeting-period">!</span>
+            !
           </h1>
-          <p className="welcome-subtitle">
-            今天也一起說英文吧！<span>不急，我們慢慢來。</span>
-          </p>
+          <p className="welcome-subtitle">{hello.chinese}</p>
         </div>
         <div className="welcome-note">
-          <Heart size={15} />
+          <Heart size={16} />
           <span>
             手機留給爸媽
             <br />
@@ -120,68 +127,101 @@ export default function HomePage() {
           </span>
         </div>
       </section>
+      <section className="right-now-section">
+        <div className="home-sections-heading">
+          <div>
+            <p className="eyebrow">A LITTLE ENGLISH, RIGHT NOW</p>
+            <h2>現在，你們在做什麼？</h2>
+          </div>
+          <span className="one-tap-note">點一下，就有一句能用</span>
+        </div>
+        <div className="quick-shortcut-grid">
+          {quickSituations.map((q) => (
+            <a key={q.id} href={`#/quick/${q.id}`} className={`quick-shortcut ${q.color}`}>
+              <span className="shortcut-icon">
+                <TopicIcon name={q.icon} size={22} />
+              </span>
+              <span>{q.title}</span>
+              <ArrowUpRight size={16} />
+            </a>
+          ))}
+        </div>
+      </section>
       <form
         className="home-search"
-        action="#/search"
         onSubmit={(e) => {
           e.preventDefault();
           if (query.trim()) location.hash = `/search?q=${encodeURIComponent(query.trim())}`;
         }}
       >
-        <Search size={21} />
+        <Search size={20} />
         <input
-          aria-label="現在想跟 Oliver 說什麼？"
-          placeholder="現在想跟 Oliver 說什麼？"
+          aria-label={`現在想跟 ${data.settings.nickname} 說什麼？`}
+          placeholder="想說別的？中文、英文都能找"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <span className="search-hint">中文、英文都可以</span>
         <button aria-label="搜尋教材" type="submit">
           <ArrowRight size={20} />
         </button>
       </form>
+      {recent.length > 0 && (
+        <section className="recent-phrases">
+          <div>
+            <Clock3 size={14} />
+            <span>上次一起說過的</span>
+            <a href="#/favorites">
+              <Bookmark size={14} />
+              收藏
+            </a>
+          </div>
+          {recent.map((s) => (
+            <a href={`#/practice/${s.id}`} key={s.id}>
+              <span lang="en">{s.english}</span>
+              <ChevronRight size={15} />
+            </a>
+          ))}
+        </section>
+      )}
       <section className="adventure-hero">
         <div className="hero-copy">
-          <div className="hero-label">
-            <span className="little-star">✳</span> TODAY'S LITTLE ADVENTURE
-          </div>
-          <div className="time-badge">
-            <Clock3 size={13} />約 5 分鐘 · 沒有倒數，只有陪伴
-          </div>
+          <div className="hero-label">TODAY’S LITTLE MOMENT</div>
           <h2>
-            今天，和恐龍
+            今天，
             <br />
-            一起出發吧。
+            一句就很好。
           </h2>
           <p>
-            找一隻喜歡的玩具，
+            一句英文，一個小動作。
             <br />
-            把小小的英文，變成大大的日常。
+            想多玩一點，再繼續。
           </p>
           <a className="button primary" href="#/today">
-            開始今天的 5 分鐘
-            <ArrowRight size={18} />
+            開始今天的一小段
+            <ArrowRight size={17} />
           </a>
-          <div className="hero-footnote">
-            <span />3 個單字
-            <span />2 句英文
-            <span />1 個小任務
-          </div>
         </div>
         <div className="hero-visual">
           <div className="speech-bubble" lang="en">
-            Let's play, {data.settings.nickname}!<span>今天想和我玩什麼？</span>
+            A little is lovely.<span>有你陪著，就很好。</span>
           </div>
           <Garden />
-          <div className="art-caption">
-            <span className="dashed-line" /> LITTLE MOMENTS, BIG DISCOVERIES <Leaf size={12} />
-          </div>
         </div>
       </section>
+      {latestClass && (
+        <a className="class-home-reminder" href="#/class-notes">
+          <TopicIcon name="backpack" size={24} />
+          <div>
+            <strong>把上次英文課，帶進今天的生活。</strong>
+            <span>{latestClass.date} 的小筆記已備妥，挑一句熟悉的玩一玩。</span>
+          </div>
+          <ArrowRight size={17} />
+        </a>
+      )}
       <div className="home-sections-heading">
         <div>
-          <p className="eyebrow">EXPLORE TOGETHER</p>
-          <h2>我們今天玩什麼？</h2>
+          <p className="eyebrow">MORE WAYS TO GROW TOGETHER</p>
+          <h2>想多玩一點的時候</h2>
         </div>
         <a href="#/favorites" className="text-button">
           <Bookmark size={16} />
@@ -195,61 +235,44 @@ export default function HomePage() {
             <div className="entrance-top">
               <div className="illustrated-icon">
                 <TopicIcon name={entry.icon} size={27} />
-                <span className="icon-spark">✧</span>
               </div>
               <span className="entry-number">{entry.number}</span>
             </div>
             <h3>
-              {entry.title === 'Oliver 成長紀錄'
+              {entry.href === '/progress'
                 ? `${data.settings.nickname} 成長紀錄`
-                : entry.title}
+                : entry.href === '/today'
+                  ? '今天的一小段'
+                  : entry.title}
             </h3>
             <p>{entry.subtitle}</p>
             <div className="entrance-bottom">
-              <span>{entry.label}</span>
+              <span>
+                {entry.href === '/dinosaur' ? `${data.settings.nickname} 的最愛` : entry.label}
+              </span>
               <ArrowUpRight size={18} />
             </div>
           </a>
         ))}
       </section>
-      <section className="home-bottom">
-        <div className="gentle-note">
-          <div className="note-icon">
-            <Heart size={21} />
-          </div>
-          <div>
-            <h3>等一等，也是一種溫柔。</h3>
-            <p>
-              問完後，留給 {data.settings.nickname} 約 5 秒。
-              <br className="mobile-only" />
-              指一指、說一個字，都是很棒的開始。
-            </p>
-          </div>
-          <span className="note-doodle">♡</span>
+      <a className="brand-home-card" href="#/about">
+        <span className="brand-story-mark">♡</span>
+        <div>
+          <span className="eyebrow">WHY WE’RE HERE · 品牌說明</span>
+          <h2>
+            英文不用很厲害，
+            <br className="mobile-only" />
+            也能把陪伴說成英文。
+          </h2>
+          <p>陪忙碌的 3–6 歲孩子爸媽，從一句日常美語開始。</p>
+          <span className="brand-read-link">
+            認識我們的小小初衷
+            <ArrowRight size={15} />
+          </span>
         </div>
-        <a className="week-preview" href="#/progress">
-          <div>
-            <span className="eyebrow">THIS WEEK</span>
-            <h3>
-              這週，一起說了 <b>{summary.total}</b> 句英文
-            </h3>
-            <p>不用追趕，陪伴就是最好的進度。</p>
-          </div>
-          <div className="week-preview-icon">
-            <TopicIcon name="sprout" size={29} />
-            <ArrowUpRight size={17} />
-          </div>
-        </a>
-      </section>
-      {plan.classroom && (
-        <a href="#/review" className="class-reminder">
-          <CalendarDays size={17} />
-          <span>今天是英文課日，回家挑一句熟悉的英文玩一玩。</span>
-          <ArrowRight size={16} />
-        </a>
-      )}
+      </a>
       <footer className="home-footer">
-        <Leaf size={13} />
+        <Heart size={13} />
         <span>Small words. Sweet moments. Growing together.</span>
       </footer>
     </div>

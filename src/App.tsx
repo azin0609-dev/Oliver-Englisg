@@ -6,6 +6,7 @@ import {
   CircleHelp,
   Download,
   Home,
+  Heart,
   Leaf,
   Menu,
   Settings,
@@ -21,6 +22,9 @@ import { DialoguePage, DialoguesPage } from './pages/Dialogues';
 import { FavoritesPage, SearchPage } from './pages/Search';
 import ProgressPage from './pages/Progress';
 import SettingsPage from './pages/Settings';
+import QuickPage from './pages/Quick';
+import AboutPage from './pages/About';
+import ClassNotesPage from './pages/ClassNotes';
 import { useApp } from './lib/context';
 import { usePwa } from './lib/pwa';
 const navItems = [
@@ -99,6 +103,11 @@ export default function App() {
         (href === '/dialogues' && path.startsWith('/dialogue/'));
   const screen = () => {
     if (path === '/') return <HomePage />;
+    if (path === '/about') return <AboutPage />;
+    if (path === '/class-notes') return <ClassNotesPage />;
+    if (path.startsWith('/quick/')) return <QuickPage key={path} id={path.split('/')[2]} />;
+    if (path.startsWith('/practice/'))
+      return <QuickPage key={path} practiceId={path.split('/')[2]} />;
     if (path === '/today') return <TodayPage />;
     if (path === '/topics') return <TopicsPage />;
     if (path.startsWith('/topic/')) return <TopicPage key={path} id={path.split('/')[2]} />;
@@ -182,6 +191,10 @@ export default function App() {
             <span>爸媽的小設定</span>
           </a>
         </nav>
+        <a href="#/about" className="about-nav-link">
+          <Heart size={17} />
+          <span>品牌說明・關於小冒險</span>
+        </a>
         <div className="sidebar-bottom">
           <div className="sidebar-message">
             <span>✳</span>
@@ -245,8 +258,8 @@ export default function App() {
                   : '每個日常，都是小冒險'}
             </span>
           </div>
-          <a href="#/settings" className="parent-pill">
-            <span>O</span>給 Oliver 的爸媽
+          <a href="#/about" className="parent-pill">
+            <span>{data.settings.nickname.slice(0, 1)}</span>給 {data.settings.nickname} 的爸媽
             <CircleHelp size={16} />
           </a>
         </div>

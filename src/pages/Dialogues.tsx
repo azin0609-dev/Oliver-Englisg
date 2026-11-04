@@ -20,6 +20,7 @@ import {
 } from '../components/Cards';
 import { TopicIcon } from '../components/Art';
 import { useApp } from '../lib/context';
+import { PhraseHelp, ResponseSupport } from '../components/ParentSupport';
 export function DialoguesPage() {
   const [category, setCategory] = useState('all');
   return (
@@ -125,7 +126,14 @@ export function DialoguePage({ id }: { id: string }) {
               </p>
               {chinese && <p className="translation">{line.traditionalChinese}</p>}
               <SpeechButtons text={line.english} />
-              <MasteryPicker id={`${id}-turn-${i}`} />
+              <PhraseHelp text={line.english} />
+              {line.role === 'parent' && (
+                <ResponseSupport reply={dialogue.turns[i + 1]?.english ?? 'Okay.'} />
+              )}
+              <details className="observation-later">
+                <summary>爸媽稍後記一下（選用）</summary>
+                <MasteryPicker id={`${id}-turn-${i}`} />
+              </details>
             </article>
           ))}
         </div>
@@ -161,7 +169,14 @@ export function DialoguePage({ id }: { id: string }) {
             </p>
             {chinese && <p className="translation">{turn.traditionalChinese}</p>}
             <SpeechButtons text={turn.english} />
-            <MasteryPicker id={`${id}-turn-${index}`} />
+            <PhraseHelp text={turn.english} />
+            {turn.role === 'parent' && (
+              <ResponseSupport key={index} reply={dialogue.turns[index + 1]?.english ?? 'Okay.'} />
+            )}
+            <details className="observation-later" key={`observe-${index}`}>
+              <summary>爸媽稍後記一下（選用）</summary>
+              <MasteryPicker id={`${id}-turn-${index}`} />
+            </details>
             <div className="conversation-nav">
               <button
                 className="button ghost"
