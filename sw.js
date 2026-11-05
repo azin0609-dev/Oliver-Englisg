@@ -1,6 +1,6 @@
 /* Generated from the complete build. No external resources. */
-const CACHE = 'oliver-shell-d7ed73f78c74';
-const ASSETS = ["apple-touch-icon.png","assets/index-Bz3VoAYH.css","assets/index-CaGRCUkO.js","icon-192.png","icon-512.png","icon-maskable-512.png","icon.svg","index.html","manifest.webmanifest"];
+const CACHE = 'oliver-shell-de6799c67e20';
+const ASSETS = ["apple-touch-icon.png","assets/index-CaE0LYRU.css","assets/index-DiJ5VDkB.js","icon-192.png","icon-512.png","icon-maskable-512.png","icon.svg","index.html","manifest.webmanifest"];
 const urls = ASSETS.map(path => new URL(path, self.registration.scope).href);
 self.addEventListener('install', event => {
  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(urls)));
