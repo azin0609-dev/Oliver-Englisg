@@ -104,12 +104,14 @@ test('all 13 diagnostic samples play normal and slow through the existing non-ov
   await page.goto('/#/settings');
   await page.waitForLoadState('networkidle');
   const before = await page.evaluate(() => JSON.stringify({ ...localStorage }));
+  const favicon = await page
+    .locator('link[rel="icon"]')
+    .evaluate((link: HTMLLinkElement) => link.href);
   const requests: string[] = [];
   page.on('request', (request) => {
     // Chromium may re-request the shell favicon after a hash navigation.
     // Keep fetch/XHR and every other request observable, including a scripted icon fetch.
-    const shellIcon =
-      request.resourceType() === 'other' && request.url() === new URL('icon.svg', page.url()).href;
+    const shellIcon = request.resourceType() === 'other' && request.url() === favicon;
     if (!shellIcon) requests.push(request.url());
   });
   await page.getByRole('link', { name: '語音檢測（進階）', exact: true }).click();

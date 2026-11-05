@@ -8,7 +8,9 @@
 
 ## 品牌名稱更新
 
-目前品牌為 **小日子英文／Little Moments**（v1.1.1）。網站、設定頁、分享標題與新加入主畫面的名稱已統一。孩子的暱稱與品牌名稱分開，既有個人設定保持不變。
+目前品牌為 **小日子英文／Little Moments**（v1.1.2）。網站、設定頁、分享標題與新加入主畫面的名稱已統一。孩子的暱稱與品牌名稱分開，既有個人設定保持不變。
+
+v1.1.2 新增「大恐龍陪小恐龍讀繪本」的品牌圖示，採奶油白、鼠尾草綠與暖黃色。iPhone、一般 PWA 與 maskable 圖示都已匯出為實際 PNG，採用新的檔名減少舊圖快取影響。圖稿與重建方式見 [品牌圖示說明](docs/brand/README.md)。
 
 這次沿用現有網址、PWA 的 id／scope、localStorage key 與備份識別，保留既有收藏與學習紀錄。若 iPhone 主畫面仍保留舊名稱，先在設定頁匯出 JSON 備份，再從 Safari 以新名稱加入主畫面；不同 iOS 版本可能使用獨立資料空間，必要時在新入口匯入備份。
 
@@ -130,12 +132,13 @@ src/
     Quick.tsx             一鍵情境互動
 public/
   manifest.webmanifest
-  icon.svg                原創恐龍圖示來源
-  *icon*.png              實際 PNG 圖示（不是改副檔名的 SVG）
+  little-moments-*.png     新品牌的 PWA／iPhone 圖示
+  icon.svg                保留的舊版恐龍圖示
+  *icon*.png              實際 PNG；舊檔名亦提供新版圖稿
   _headers                Netlify／Cloudflare Pages 的靜態標頭設定
 scripts/
   build-sw.mjs            由完整 build 雜湊產生離線快取清單
-  generate-icons.mjs      從原創 SVG 產生 PNG
+  generate-icons.mjs      從品牌原圖匯出各尺寸 PNG
   capture.mjs             實際頁面截圖
 tests/
   unit.test.ts            教材、搜尋、推薦、備份與計數測試
@@ -170,7 +173,7 @@ npm run test:e2e
 
 ### GitHub Pages（目前的手機網址）
 
-目前正式靜態檔案發布到 `gh-pages`，原始碼保存於 `codex/oliver-english-adventure`。已啟用 **Deploy from a branch → gh-pages → /(root)** 的網站，每次更新該分支就會交由 GitHub Pages 重新發布，不需要重新安裝主畫面圖示。
+目前正式靜態檔案發布到 `gh-pages`，最新原始碼在 `v1.2`；`codex/oliver-english-adventure` 保留品牌更新基準。已啟用 **Deploy from a branch → gh-pages → /(root)** 的網站，每次更新該分支就會交由 GitHub Pages 重新發布。網站內容可經 App 更新取得；iPhone 已加入的圖示與名稱可能仍需重新加入主畫面才變更。
 
 預期網站網址：`https://azin0609-dev.github.io/Oliver-Englisg/`。本環境的網路政策封鎖此網域，無法直接替正式網址執行 HTTP／真機驗收；部署分支上傳成功不等於網站已完成發布。請以 GitHub 的部署結果及手機實際開啟為準。
 

@@ -210,8 +210,17 @@ test('production service worker caches every built asset and works on an offline
   expect(manifest.short_name).toBe('小日子英文');
   expect(manifest.id).toBe('./');
   expect(manifest.scope).toBe('./');
-  for (const icon of manifest.icons)
-    expect((await page.request.get(`/${icon.src}`)).ok()).toBe(true);
+  for (const icon of manifest.icons) {
+    const response = await page.request.get(`/${icon.src}`);
+    expect(response.ok()).toBe(true);
+    const png = await response.body();
+    expect(png.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
+    expect(`${png.readUInt32BE(16)}x${png.readUInt32BE(20)}`).toBe(icon.sizes);
+  }
+  const appleIcon = await page.locator('link[rel="apple-touch-icon"]').getAttribute('href');
+  const applePng = await (await page.request.get(appleIcon!)).body();
+  expect(applePng.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
+  expect([applePng.readUInt32BE(16), applePng.readUInt32BE(20)]).toEqual([180, 180]);
   const cachedUrls = await page.evaluate(async () => {
     const keys = await caches.keys();
     return (await (await caches.open(keys.find((k) => k.startsWith('oliver-shell-'))!)).keys()).map(

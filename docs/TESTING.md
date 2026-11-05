@@ -88,6 +88,13 @@
 
 [語音檢測頁截圖](screenshots/voice-check-390.png) 使用 Chromium 390px 行動尺寸，呈現該瀏覽器實際回報的空聲音清單，並非 iPhone 真機結果。
 
+## v1.1.2 品牌圖示驗收
+
+- Manifest 仍維持原本的 id／scope／start_url，改用新品牌 PNG 檔名；iPhone touch icon 也使用新檔名。
+- 既有正式版 PWA 測試讀取每個 Manifest 圖片的實際 PNG 簽章與尺寸，確認與宣告一致；iPhone touch icon 為 180 × 180 PNG。
+- 圖示只在建置時由原圖匯出，不新增套件或執行期外部請求。既有離線與更新保留資料測試維持執行。
+- 新圖預覽、重建方式與 iPhone 加入步驟見 [品牌圖示說明](brand/README.md)。已加入的 iPhone 圖示是否自動換圖，仍需真機確認，不能以 Chromium 代替。
+
 ## iPhone 真機驗收清單（尚未執行）
 
 建議使用部署後的 HTTPS 網址，在至少一台實體 iPhone 的 Safari 與加入主畫面的 App 各做一次：
