@@ -25,6 +25,7 @@ import SettingsPage from './pages/Settings';
 import QuickPage from './pages/Quick';
 import AboutPage from './pages/About';
 import ClassNotesPage from './pages/ClassNotes';
+import VoiceCheckPage from './pages/VoiceCheck';
 import { useApp } from './lib/context';
 import { usePwa } from './lib/pwa';
 import { brand } from './lib/brand';
@@ -104,6 +105,7 @@ export default function App() {
         (href === '/dialogues' && path.startsWith('/dialogue/'));
   const screen = () => {
     if (path === '/') return <HomePage />;
+    if (path === '/voice-check') return <VoiceCheckPage />;
     if (path === '/about') return <AboutPage />;
     if (path === '/class-notes') return <ClassNotesPage />;
     if (path.startsWith('/quick/')) return <QuickPage key={path} id={path.split('/')[2]} />;

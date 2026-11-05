@@ -317,6 +317,9 @@ export default function SettingsPage() {
           </span>
         </div>
       </section>
+      <a href="#/voice-check" className="voice-check-entry">
+        語音檢測（進階）
+      </a>
     </div>
   );
 }
