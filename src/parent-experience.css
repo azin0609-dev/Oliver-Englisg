@@ -1768,3 +1768,52 @@ textarea:focus-visible {
     font-size: 11px;
   }
 }
+/* The personal nickname stays separate from the shared product name. */
+.brand strong {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang TC', sans-serif;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: 0.6px;
+  line-height: 1.35;
+}
+.brand > span > span {
+  font-size: 12px;
+  letter-spacing: 0.8px;
+}
+.brand small {
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+.mobile-brand > span {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang TC', sans-serif;
+  font-size: 21px;
+  letter-spacing: 0.5px;
+  font-weight: 650;
+}
+.mobile-brand small {
+  font-family: Georgia, serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  line-height: 1.7;
+  font-weight: 400;
+}
+.home-footer {
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 0.7px;
+}
+@media (max-width: 360px) {
+  .mobile-brand > span {
+    font-size: 20px;
+  }
+  .mobile-brand small {
+    font-size: 9px;
+  }
+  .brand strong {
+    font-size: 21px;
+  }
+  .home-footer {
+    font-size: 10px;
+    letter-spacing: 0.3px;
+  }
+}

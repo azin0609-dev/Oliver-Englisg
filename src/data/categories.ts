@@ -48,7 +48,7 @@ export const categories: Category[] = [
     icon: 'dino',
     color: 'sage',
     description: '跟著最喜歡的恐龍，一起玩、一起說。',
-    tip: '讓 Oliver 選喜歡的玩具。問完等約 5 秒，不要立刻代答。',
+    tip: '讓孩子選喜歡的玩具。問完等約 5 秒，不要立刻代答。',
   },
   {
     id: 'park',

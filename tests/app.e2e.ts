@@ -206,6 +206,10 @@ test('production service worker caches every built asset and works on an offline
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
   const manifest = await (await page.request.get('/manifest.webmanifest')).json();
   expect(manifest.display).toBe('standalone');
+  expect(manifest.name).toBe('小日子英文 · Little Moments');
+  expect(manifest.short_name).toBe('小日子英文');
+  expect(manifest.id).toBe('./');
+  expect(manifest.scope).toBe('./');
   for (const icon of manifest.icons)
     expect((await page.request.get(`/${icon.src}`)).ok()).toBe(true);
   const cachedUrls = await page.evaluate(async () => {

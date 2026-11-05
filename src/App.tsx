@@ -27,12 +27,13 @@ import AboutPage from './pages/About';
 import ClassNotesPage from './pages/ClassNotes';
 import { useApp } from './lib/context';
 import { usePwa } from './lib/pwa';
+import { brand } from './lib/brand';
 const navItems = [
   { href: '/', label: '冒險首頁', mobile: '首頁', icon: 'home' },
   { href: '/topics', label: '生活情境英文', mobile: '生活情境', icon: 'basket' },
   { href: '/dinosaur', label: '恐龍英文樂園', mobile: '恐龍樂園', icon: 'dino' },
   { href: '/dialogues', label: '親子對話練習', mobile: '親子對話', icon: 'message' },
-  { href: '/progress', label: 'Oliver 成長紀錄', mobile: '成長紀錄', icon: 'sprout' },
+  { href: '/progress', label: '成長紀錄', mobile: '成長紀錄', icon: 'sprout' },
 ];
 function useRoute() {
   const [route, setRoute] = useState(location.hash.slice(1) || '/');
@@ -142,14 +143,14 @@ export default function App() {
         跳到主要內容
       </a>
       <aside inert={isMobile && !mobileMenu} className={`sidebar ${mobileMenu ? 'menu-open' : ''}`}>
-        <a href="#/" className="brand" aria-label="Oliver's English Adventure 首頁">
+        <a href="#/" className="brand" aria-label={`${brand.name} ${brand.englishName} 首頁`}>
           <span className="brand-mark">
             <Dino small />
           </span>
           <span>
-            <strong>Oliver's</strong>
-            <span>English Adventure</span>
-            <small>英文小冒險</small>
+            <strong>{brand.name}</strong>
+            <span>{brand.englishName}</span>
+            <small>免費親子美語</small>
           </span>
         </a>
         <button
@@ -228,7 +229,7 @@ export default function App() {
           <a className="mobile-brand" href="#/">
             <Dino />
             <span>
-              Oliver's <small>English Adventure</small>
+              {brand.name} <small>{brand.englishName}</small>
             </span>
           </a>
           <div>
@@ -248,7 +249,9 @@ export default function App() {
         <div className="desktop-header">
           <div className="header-trail">
             <Home size={14} />
-            <span>Oliver 的英文小冒險</span>
+            <span>
+              {brand.name} · {brand.englishName}
+            </span>
             <span className="header-slash">/</span>
             <span>
               {path === '/'

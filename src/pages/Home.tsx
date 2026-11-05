@@ -13,6 +13,7 @@ import { useApp } from '../lib/context';
 import { greeting } from '../lib/parenting';
 import { quickSituations } from '../data/parentTools';
 import { sentences } from '../data';
+import { brand } from '../lib/brand';
 const entrances = [
   {
     number: '01',
@@ -39,7 +40,7 @@ const entrances = [
     icon: 'dino',
     color: 'sage',
     href: '/dinosaur',
-    label: 'Oliver 的最愛',
+    label: '孩子的最愛',
   },
   {
     number: '04',
@@ -61,7 +62,7 @@ const entrances = [
   },
   {
     number: '06',
-    title: 'Oliver 成長紀錄',
+    title: '成長紀錄',
     subtitle: '每個小進步，都值得看見',
     icon: 'sprout',
     color: 'purple',
@@ -258,7 +259,7 @@ export default function HomePage() {
       <a className="brand-home-card" href="#/about">
         <span className="brand-story-mark">♡</span>
         <div>
-          <span className="eyebrow">WHY WE’RE HERE · 品牌說明</span>
+          <span className="eyebrow">LITTLE MOMENTS · 品牌說明</span>
           <h2>
             英文不用很厲害，
             <br className="mobile-only" />
@@ -266,14 +267,14 @@ export default function HomePage() {
           </h2>
           <p>陪忙碌的 3–6 歲孩子爸媽，從一句日常美語開始。</p>
           <span className="brand-read-link">
-            認識我們的小小初衷
+            認識小日子英文
             <ArrowRight size={15} />
           </span>
         </div>
       </a>
       <footer className="home-footer">
         <Heart size={13} />
-        <span>Small words. Sweet moments. Growing together.</span>
+        <span>{brand.tagline}</span>
       </footer>
     </div>
   );

@@ -17,6 +17,7 @@ import type { AppData, Difficulty } from '../types';
 import { useApp } from '../lib/context';
 import { exportBackup, parseBackup } from '../lib/storage';
 import { localDate } from '../lib/dates';
+import { brand } from '../lib/brand';
 import { PageHeading } from '../components/Cards';
 export default function SettingsPage() {
   const { data, settings, voices, speak, setNotice, replaceData } = useApp();
@@ -31,7 +32,7 @@ export default function SettingsPage() {
     const url = URL.createObjectURL(new Blob([exportBackup(data)], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = `oliver-english-${localDate()}.json`;
+    a.download = `little-moments-${localDate()}.json`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 30000);
     setNotice('備份檔已交給瀏覽器下載。iPhone 可在「檔案」App 的下載項目查看。');
@@ -298,7 +299,7 @@ export default function SettingsPage() {
       <a href="#/about" className="settings-brand-link">
         <Heart size={24} />
         <div>
-          <strong>品牌說明・我們為什麼做這個 App</strong>
+          <strong>品牌說明・關於小日子英文</strong>
           <span>英文不用很厲害，也能陪孩子建立日常美語情境。</span>
         </div>
       </a>
@@ -311,7 +312,9 @@ export default function SettingsPage() {
             或第三方追蹤。不錄音、不使用麥克風、不取得位置，也不上傳學習紀錄。內建教材與原創 SVG
             插畫隨 App 提供，僅在裝置本機保存你的設定與紀錄。
           </p>
-          <span>Oliver's English Adventure · v1.1.0</span>
+          <span>
+            {brand.fullName} · v{brand.version}
+          </span>
         </div>
       </section>
     </div>
